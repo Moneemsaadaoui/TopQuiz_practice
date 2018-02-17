@@ -1,8 +1,12 @@
 package rrdl.topquiz.controller;
 
+import android.content.DialogInterface;
+import android.os.Build;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -22,12 +26,14 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     private Button mAnswer4;
     private QuestionBank mQuestionBank;
     private Question mCurrentQuestion;
+    private int mScore;
+    private int mNumberOfQuestions;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
         mQuestionBank=this.GenerateQuestions();
-
+        mNumberOfQuestions=3;
         //Wiring the widgets..
         mGameQuestion=findViewById(R.id.game_activity_textview);
         mAnswer1=findViewById(R.id.activity_game_answer1_btn);
@@ -82,9 +88,28 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         if (responseIndex == mCurrentQuestion.getAnswerIndex()) {
             // Good answer
             Toast.makeText(this, "Correct", Toast.LENGTH_SHORT).show();
+            mScore++;
                     } else {
             // Wrong answer
             Toast.makeText(this, "Wrong answer!", Toast.LENGTH_SHORT).show();
         }
+        if(--mNumberOfQuestions==0)
+        {
+            endGame();
+        }else
+        {
+            mCurrentQuestion=mQuestionBank.getQuestion();
+            DisplayQuestion(mCurrentQuestion);
+        }
+    }
+    private void endGame()
+    {
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setTitle("Well done:").setMessage("Your score is :"+mScore).setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                finish();
+            }
+        }).create().show();
     }
 }
