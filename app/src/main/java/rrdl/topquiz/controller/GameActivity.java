@@ -1,12 +1,15 @@
 package rrdl.topquiz.controller;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -28,12 +31,15 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     private Question mCurrentQuestion;
     private int mScore;
     private int mNumberOfQuestions;
+    private boolean mEnableTouchEvents;
+    public static final String BUNDLE_EXTRA_SCORE="BUNDLE_EXTRA_SCORE";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
         mQuestionBank=this.GenerateQuestions();
         mNumberOfQuestions=3;
+        mEnableTouchEvents=true;
         //Wiring the widgets..
         mGameQuestion=findViewById(R.id.game_activity_textview);
         mAnswer1=findViewById(R.id.activity_game_answer1_btn);
@@ -80,6 +86,12 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         ,"Netbeans","Gta vice city","Nightwish"),0);
          return new QuestionBank(Arrays.asList(question1,question2,question3,question4));
     }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        return mEnableTouchEvents && super.dispatchTouchEvent(ev);
+    }
+
     @Override
     //Implementation of the onclickListener
     public void onClick(View view) {
@@ -93,14 +105,24 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             // Wrong answer
             Toast.makeText(this, "Wrong answer!", Toast.LENGTH_SHORT).show();
         }
-        if(--mNumberOfQuestions==0)
-        {
-            endGame();
-        }else
-        {
-            mCurrentQuestion=mQuestionBank.getQuestion();
-            DisplayQuestion(mCurrentQuestion);
-        }
+        mEnableTouchEvents=false;
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mEnableTouchEvents=true;
+                if(--mNumberOfQuestions==0)
+                {
+
+                    endGame();
+                }else
+                {
+                    mCurrentQuestion=mQuestionBank.getQuestion();
+                    DisplayQuestion(mCurrentQuestion);
+                }
+            }
+        },2000);
+
+
     }
     private void endGame()
     {
@@ -108,6 +130,9 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         builder.setTitle("Well done:").setMessage("Your score is :"+mScore).setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
+                Intent intent=new Intent();
+                intent.putExtra(BUNDLE_EXTRA_SCORE,mScore);
+                setResult(RESULT_OK,intent);
                 finish();
             }
         }).create().show();
